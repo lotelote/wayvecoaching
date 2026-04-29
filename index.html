@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wayve Coaching — Analyse IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0a0a;--bg2:#141414;--bg3:#1c1c1c;--bg4:#252525;--border:#2a2a2a;--border2:#333;--text:#f0f0f0;--text2:#999;--text3:#555;--accent:#3b82f6;--accent2:#1d4ed8;--run:#10b981;--bike:#3b82f6;--swim:#8b5cf6;--danger:#ef4444}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px}
+.app{display:flex;height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.logo{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.logo-mark{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0}
+.logo-text{font-size:14px;font-weight:600;color:var(--text)}
+.logo-sub{font-size:10px;color:var(--text3);margin-top:1px}
+.s-section{padding:12px 12px 4px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em}
+.athlete-list{flex:1;overflow-y:auto;padding:4px 8px}
+.ath-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;margin-bottom:2px;transition:background .15s}
+.ath-item:hover{background:var(--bg3)}
+.ath-item.active{background:var(--bg4);border:1px solid var(--border2)}
+.ath-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.ath-name{font-size:12px;color:var(--text);flex:1}
+.ath-count{font-size:10px;color:var(--text3)}
+.add-ath{margin:8px;padding:8px;border:1px dashed var(--border2);border-radius:6px;background:none;color:var(--text3);cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;width:calc(100% - 16px);text-align:center;transition:all .15s}
+.add-ath:hover{border-color:var(--accent);color:var(--accent)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:46px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;background:var(--bg2);flex-shrink:0}
+.topbar-name{font-size:14px;font-weight:500;color:var(--text)}
+.tabs{display:flex;gap:4px;margin-left:auto}
+.tab{padding:6px 14px;font-size:12px;cursor:pointer;color:var(--text3);border-radius:5px;transition:all .15s;border:1px solid transparent}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--bg3);color:var(--text);border-color:var(--border2)}
+.content{flex:1;overflow-y:auto;padding:16px}
+
+/* IMPORT */
+.drop-zone{border:1px dashed var(--border2);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px;position:relative}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);background:rgba(59,130,246,.05)}
+.drop-icon{font-size:26px;margin-bottom:8px;color:var(--text3)}
+.drop-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px}
+.drop-sub{font-size:12px;color:var(--text2)}
+.drop-formats{margin-top:10px;display:flex;justify-content:center;gap:6px}
+.fmt-badge{font-size:10px;padding:2px 8px;border-radius:4px;border:1px solid var(--border2);color:var(--text3)}
+#fileInput{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+
+/* SESSIONS */
+.section-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.sess-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.sess-card{border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.sess-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.sess-card.sport-run::before{background:var(--run)}
+.sess-card.sport-bike::before{background:var(--bike)}
+.sess-card.sport-swim::before{background:var(--swim)}
+.sess-card:hover{border-color:var(--border2);background:var(--bg3)}
+.sess-card.selected{border-color:var(--accent);background:rgba(59,130,246,.08)}
+.sess-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.sess-title{font-size:12px;font-weight:500;flex:1;color:var(--text)}
+.sess-date{font-size:11px;color:var(--text3)}
+.sport-tag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;flex-shrink:0}
+.tag-run{background:rgba(16,185,129,.15);color:#10b981}
+.tag-bike{background:rgba(59,130,246,.15);color:#60a5fa}
+.tag-swim{background:rgba(139,92,246,.15);color:#a78bfa}
+.sess-metrics{display:flex;flex-wrap:wrap;gap:10px}
+.sm{font-size:11px;color:var(--text2)}
+.sm b{color:var(--text);font-weight:500}
+.del-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px;transition:all .15s;flex-shrink:0}
+.del-btn:hover{color:var(--danger);background:rgba(239,68,68,.1)}
+.sel-cta{padding:10px 16px;background:var(--accent);border:none;border-radius:8px;width:100%;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;font-weight:500;transition:background .15s;margin-top:4px}
+.sel-cta:hover{background:var(--accent2)}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 46px)}
+.context-bar{padding:8px 14px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:11px;color:var(--text2);display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}
+.ctx-tag{background:rgba(59,130,246,.15);color:#60a5fa;padding:2px 8px;border-radius:4px;font-size:10px}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.msg-row{display:flex;gap:8px;align-items:flex-start}
+.msg-row.coach{flex-direction:row-reverse}
+.msg-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.msg-av.ai{background:var(--accent2);color:#fff}
+.msg-av.coach{background:var(--bg4);border:1px solid var(--border2);color:var(--text2)}
+.bubble{max-width:80%;padding:9px 13px;border-radius:8px;font-size:13px;line-height:1.6;white-space:pre-wrap}
+.bubble.ai{background:var(--bg3);border:1px solid var(--border);color:var(--text)}
+.bubble.coach{background:var(--accent);color:#fff}
+.typing{display:flex;gap:4px;align-items:center;padding:8px 4px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--text3);animation:pulse 1.2s infinite}
+.dot:nth-child(2){animation-delay:.2s}
+.dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.quick-row{padding:8px 12px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0}
+.q-btn{font-size:11px;padding:4px 10px;border-radius:5px;border:1px solid var(--border2);background:none;color:var(--text2);cursor:pointer;transition:all .15s}
+.q-btn:hover{border-color:var(--accent);color:var(--accent)}
+.input-row{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.chat-input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;resize:none;min-height:38px;max-height:90px}
+.chat-input:focus{outline:none;border-color:var(--accent)}
+.chat-input::placeholder{color:var(--text3)}
+.send-btn{padding:8px 16px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;flex-shrink:0;transition:background .15s}
+.send-btn:hover{background:var(--accent2)}
+.send-btn:disabled{background:var(--bg4);color:var(--text3);cursor:not-allowed}
+
+/* API KEY */
+.api-banner{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#fca5a5;display:flex;align-items:center;gap:10px}
+.api-input-wrap{display:flex;gap:8px;margin-top:8px}
+.api-input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12px;font-family:'DM Mono',monospace}
+.api-input:focus{outline:none;border-color:var(--accent)}
+.api-save{padding:7px 14px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-size:12px;cursor:pointer}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px}
+.stat-lbl{font-size:10px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.stat-val{font-size:22px;font-weight:500;font-family:'DM Mono',monospace;color:var(--text)}
+.stat-unit{font-size:11px;color:var(--text3);font-weight:400}
+.bar-chart{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px}
+.bc-title{font-size:12px;color:var(--text2);margin-bottom:12px}
+.bars{display:flex;align-items:flex-end;gap:8px;height:80px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar{width:100%;border-radius:3px 3px 0 0;min-height:4px}
+.bar-lbl{font-size:10px;color:var(--text3);text-align:center}
+.bar-val{font-size:10px;color:var(--text2);font-family:'DM Mono',monospace}
+.empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px}
+.analyse-cta{padding:10px 16px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;width:100%;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;text-align:center;transition:all .15s;margin-top:4px}
+.analyse-cta:hover{border-color:var(--accent);color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">W</div>
+      <div><div class="logo-text">Wayve Coaching</div><div class="logo-sub">Analyse IA</div></div>
+    </div>
+    <div class="s-section">Athlètes</div>
+    <div class="athlete-list" id="athList"></div>
+    <button class="add-ath" onclick="addAthlete()">+ Ajouter un athlète</button>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div id="topAvatar" style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0"></div>
+        <span id="topName" class="topbar-name"></span>
+      </div>
+      <div class="tabs">
+        <div class="tab active" id="tab-sessions" onclick="switchTab('sessions')">Séances</div>
+        <div class="tab" id="tab-analyse" onclick="switchTab('analyse')">Analyse IA</div>
+        <div class="tab" id="tab-stats" onclick="switchTab('stats')">Stats</div>
+      </div>
+    </div>
+    <div class="content" id="mainContent" style="padding:0"></div>
+  </div>
+</div>
+
+<script>
+const COLORS=['#1d4ed8','#065f46','#7c2d12','#5b21b6','#92400e','#1e3a5f','#134e4a'];
+const SPORT_NAMES={run:'Course à pied',bike:'Vélo',swim:'Natation'};
+
+let state={athletes:[],sessions:{},selected:null,selectedSessions:[],tab:'sessions',chat:[],loading:false,apiKey:''};
+
+function loadState(){
+  try{const s=localStorage.getItem('tricoach_v2');if(s)state={...state,...JSON.parse(s)};}catch(e){}
+  if(!state.athletes.length){
+    state.athletes=[{id:'a1',name:'Athlète 1',initials:'A1',color:'#1d4ed8'}];
+    state.sessions={a1:[]};state.selected='a1';
+  }
+  if(!state.chat)state.chat=[];
+  if(!state.apiKey)state.apiKey='';
+}
+
+function saveState(){try{localStorage.setItem('tricoach_v2',JSON.stringify(state));}catch(e){}}
+
+// FIT PARSER
+function parseFit(buffer){
+  const bytes=new Uint8Array(buffer);
+  let i=bytes[0];
+  const fieldDefs={};
+  let sessionHR=[],sessionPow=[],sessionSpeed=[],sessionCad=[],startTs=null,endTs=null,distM=null;
+  while(i<bytes.length-2){
+    try{
+      const recHdr=bytes[i++];
+      if(recHdr===undefined)break;
+      if(recHdr&0x80)continue;
+      const hasDef=recHdr&0x40;
+      const localMsgType=recHdr&0x0F;
+      if(hasDef){
+        i++;
+        const arch=bytes[i++];
+        const gmn=arch===1?((bytes[i]<<8)|bytes[i+1]):(bytes[i]|(bytes[i+1]<<8));i+=2;
+        const nF=bytes[i++];const fields=[];
+        for(let f=0;f<nF;f++){const fn=bytes[i++],fs=bytes[i++],ft=bytes[i++];fields.push({num:fn,size:fs});}
+        const nDev=(recHdr&0x20)?bytes[i++]:0;for(let d=0;d<nDev;d++)i+=3;
+        fieldDefs[localMsgType]={gmn,fields,arch};
+      }else{
+        const def=fieldDefs[localMsgType];
+        if(!def){i+=1;continue;}
+        const rec={};
+        for(const f of def.fields){
+          let val=0;
+          if(f.size===1)val=bytes[i++];
+          else if(f.size===2){val=def.arch===1?(bytes[i+1]|(bytes[i]<<8)):(bytes[i]|(bytes[i+1]<<8));i+=2;}
+          else if(f.size===4){val=def.arch===1?((bytes[i+3])|(bytes[i+2]<<8)|(bytes[i+1]<<16)|(bytes[i]<<24)):((bytes[i])|(bytes[i+1]<<8)|(bytes[i+2]<<16)|(bytes[i+3]<<24));i+=4;val=val>>>0;}
+          else{for(let x=0;x<f.size;x++)i++;val=0;}
+          rec[f.num]=val;
+        }
+        if(def.gmn===20){
+          const hr=rec[3],spd=rec[6],pow=rec[7],cad=rec[4],ts=rec[253];
+          if(hr&&hr<250)sessionHR.push(hr);
+          if(spd&&spd<65536)sessionSpeed.push(spd/1000*3.6);
+          if(pow&&pow<2000)sessionPow.push(pow);
+          if(cad&&cad<250)sessionCad.push(cad);
+          if(ts&&!startTs)startTs=ts;if(ts)endTs=ts;
+        }
+        if(def.gmn===18){const d=rec[9];if(d&&d<1e8)distM=d/100;}
+      }
+    }catch(e){break;}
+  }
+  const avg=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):null;
+  const max=a=>a.length?Math.round(Math.max(...a)):null;
+  const dur=(startTs&&endTs)?(endTs-startTs):null;
+  const sport=sessionPow.length>5?'bike':(sessionSpeed.length>5&&avg(sessionSpeed)<5?'swim':'run');
+  return{sport,avgHR:avg(sessionHR),maxHR:max(sessionHR),avgPow:avg(sessionPow),maxPow:max(sessionPow),avgSpeed:sessionSpeed.length?+(avg(sessionSpeed)).toFixed(1):null,avgCad:avg(sessionCad),durationSec:dur,distanceM:distM,raw:{hrArr:sessionHR.slice(0,200),powArr:sessionPow.slice(0,200)}};
+}
+
+function parseTCX(text){
+  const doc=new DOMParser().parseFromString(text,'text/xml');
+  const tps=doc.querySelectorAll('Trackpoint');
+  let hrs=[],pows=[],cads=[],times=[];
+  tps.forEach(tp=>{
+    const hr=tp.querySelector('HeartRateBpm Value'),pw=tp.querySelector('Watts'),cd=tp.querySelector('Cadence'),t=tp.querySelector('Time');
+    if(hr)hrs.push(+hr.textContent);if(pw)pows.push(+pw.textContent);if(cd)cads.push(+cd.textContent);if(t)times.push(new Date(t.textContent));
+  });
+  const avg=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):null;
+  const max=a=>a.length?Math.round(Math.max(...a)):null;
+  const dur=times.length>1?Math.round((times[times.length-1]-times[0])/1000):null;
+  const distEl=doc.querySelector('DistanceMeters');
+  return{sport:pows.length>5?'bike':'run',avgHR:avg(hrs),maxHR:max(hrs),avgPow:avg(pows),maxPow:max(pows),avgCad:avg(cads),durationSec:dur,distanceM:distEl?Math.round(+distEl.textContent):null,raw:{hrArr:hrs.slice(0,200),powArr:pows.slice(0,200)}};
+}
+
+function parseGPX(text){
+  const doc=new DOMParser().parseFromString(text,'text/xml');
+  const pts=doc.querySelectorAll('trkpt');
+  let hrs=[],times=[],lats=[],lons=[];
+  pts.forEach(pt=>{
+    lats.push(+pt.getAttribute('lat'));lons.push(+pt.getAttribute('lon'));
+    const hr=pt.querySelector('hr'),t=pt.querySelector('time');
+    if(hr)hrs.push(+hr.textContent);if(t)times.push(new Date(t.textContent));
+  });
+  const avg=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):null;
+  let distM=0;
+  for(let i=1;i<lats.length;i++){const R=6371e3,dLa=(lats[i]-lats[i-1])*Math.PI/180,dLo=(lons[i]-lons[i-1])*Math.PI/180,a=Math.sin(dLa/2)**2+Math.cos(lats[i-1]*Math.PI/180)*Math.cos(lats[i]*Math.PI/180)*Math.sin(dLo/2)**2;distM+=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+  const dur=times.length>1?Math.round((times[times.length-1]-times[0])/1000):null;
+  const spd=dur&&distM?(distM/dur*3.6):null;
+  return{sport:'run',avgHR:avg(hrs),maxHR:null,avgSpeed:spd?+spd.toFixed(1):null,durationSec:dur,distanceM:Math.round(distM),raw:{hrArr:hrs.slice(0,200)}};
+}
+
+function fmtDur(s){if(!s)return'—';const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return h?`${h}h${String(m).padStart(2,'0')}`:`${m}min`;}
+function fmtPace(kmh){if(!kmh||kmh<1)return'—';const mpk=60/kmh,m=Math.floor(mpk),s=Math.round((mpk-m)*60);return`${m}:${String(s).padStart(2,'0')}/km`;}
+
+async function handleFile(file){
+  const ext=file.name.split('.').pop().toLowerCase();
+  let data={};
+  try{
+    if(ext==='fit'){const buf=await file.arrayBuffer();data=parseFit(buf);}
+    else if(ext==='tcx'){const txt=await file.text();data=parseTCX(txt);}
+    else if(ext==='gpx'){const txt=await file.text();data=parseGPX(txt);}
+    else{alert('Format non supporté. Utilise .fit, .tcx ou .gpx');return;}
+    const id='s_'+Date.now();
+    const sess={id,filename:file.name,date:new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}),timestamp:Date.now(),ext,sport:data.sport||'run',avgHR:data.avgHR,maxHR:data.maxHR,avgPow:data.avgPow,maxPow:data.maxPow,avgSpeed:data.avgSpeed,avgCad:data.avgCad,durationSec:data.durationSec,distanceM:data.distanceM,raw:data.raw||{}};
+    if(!state.sessions[state.selected])state.sessions[state.selected]=[];
+    state.sessions[state.selected].unshift(sess);
+    saveState();renderContent();
+  }catch(e){alert('Erreur parsing : '+e.message);}
+}
+
+function addAthlete(){
+  const name=prompt('Nom de l\'athlète :');if(!name)return;
+  const id='a_'+Date.now();
+  const initials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  const color=COLORS[state.athletes.length%COLORS.length];
+  state.athletes.push({id,name,initials,color});
+  state.sessions[id]=[];state.selected=id;state.selectedSessions=[];state.chat=[];
+  saveState();render();
+}
+
+function render(){renderAthletes();renderTopbar();renderContent();}
+
+function renderAthletes(){
+  document.getElementById('athList').innerHTML=state.athletes.map(a=>{
+    const cnt=(state.sessions[a.id]||[]).length;
+    return`<div class="ath-item ${a.id===state.selected?'active':''}" onclick="selectAth('${a.id}')"><div class="ath-avatar" style="background:${a.color}25;color:${a.color}">${a.initials}</div><span class="ath-name">${a.name}</span><span class="ath-count">${cnt}</span></div>`;
+  }).join('');
+}
+
+function renderTopbar(){
+  const a=state.athletes.find(x=>x.id===state.selected);if(!a)return;
+  const av=document.getElementById('topAvatar');
+  av.style.background=a.color+'25';av.style.color=a.color;av.textContent=a.initials;
+  document.getElementById('topName').textContent=a.name;
+}
+
+function selectAth(id){state.selected=id;state.selectedSessions=[];state.chat=[];saveState();render();}
+
+function switchTab(t){
+  state.tab=t;
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  renderContent();
+}
+
+function renderContent(){
+  const c=document.getElementById('mainContent');
+  if(state.tab==='sessions')renderSessions(c);
+  else if(state.tab==='analyse')renderAnalyse(c);
+  else renderStats(c);
+}
+
+function renderSessions(c){
+  const list=state.sessions[state.selected]||[];
+  c.style.padding='16px';
+  c.innerHTML=`
+    <div class="section-lbl">Importer une séance</div>
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept=".fit,.tcx,.gpx" multiple onchange="onFileSelect(event)">
+      <div class="drop-icon">↑</div>
+      <div class="drop-title">Glisser un fichier ici</div>
+      <div class="drop-sub">ou cliquer pour parcourir</div>
+      <div class="drop-formats"><span class="fmt-badge">.FIT</span><span class="fmt-badge">.TCX</span><span class="fmt-badge">.GPX</span></div>
+    </div>
+    <div class="section-lbl">${list.length} séance${list.length!==1?'s':''} importée${list.length!==1?'s':''}</div>
+    <div class="sess-list">
+      ${list.length===0?'<div class="empty">Aucune séance — importe un fichier .fit, .tcx ou .gpx depuis Nolio</div>':list.map(s=>sessCard(s)).join('')}
+    </div>
+    ${state.selectedSessions.length>0?`<button class="sel-cta" onclick="switchTab('analyse')">Analyser ${state.selectedSessions.length} séance(s) avec Claude →</button>`:''}
+  `;
+  setupDrop();
+}
+
+function sessCard(s){
+  const sel=state.selectedSessions.includes(s.id);
+  const sport=s.sport||'run';
+  const tag={run:'tag-run',bike:'tag-bike',swim:'tag-swim'}[sport]||'tag-run';
+  const selIdx=state.selectedSessions.indexOf(s.id);
+  const selBadge=sel?`<span style="background:var(--accent);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;flex-shrink:0">${selIdx+1}</span>`:'';
+  return`<div class="sess-card sport-${sport} ${sel?'selected':''}" onclick="toggleSess('${s.id}')">
+    <div class="sess-top">
+      ${selBadge}
+      <span class="sport-tag ${tag}">${SPORT_NAMES[sport]}</span>
+      <span class="sess-title">${s.label||s.filename}</span>
+      <span class="sess-date">${s.date}</span>
+      <button class="del-btn" title="Renommer" onclick="event.stopPropagation();renameSession('${s.id}')">✎</button>
+      <button class="del-btn" onclick="event.stopPropagation();delSess('${s.id}')">×</button>
+    </div>
+    <div class="sess-metrics">
+      ${s.durationSec?`<span class="sm">Durée <b>${fmtDur(s.durationSec)}</b></span>`:''}
+      ${s.avgHR?`<span class="sm">FC moy <b>${s.avgHR} bpm</b></span>`:''}
+      ${s.maxHR?`<span class="sm">FC max <b>${s.maxHR} bpm</b></span>`:''}
+      ${s.avgPow?`<span class="sm">Puissance <b>${s.avgPow} w</b></span>`:''}
+      ${s.maxPow?`<span class="sm">Pmax <b>${s.maxPow} w</b></span>`:''}
+      ${s.avgSpeed?`<span class="sm">${sport==='run'?'Allure':'Vitesse'} <b>${sport==='run'?fmtPace(s.avgSpeed):s.avgSpeed+' km/h'}</b></span>`:''}
+      ${s.avgCad?`<span class="sm">Cadence <b>${s.avgCad} rpm</b></span>`:''}
+      ${s.distanceM?`<span class="sm">Distance <b>${(s.distanceM/1000).toFixed(2)} km</b></span>`:''}
+    </div>
+  </div>`;
+}
+
+function renameSession(id){
+  const sess=(state.sessions[state.selected]||[]).find(s=>s.id===id);
+  if(!sess)return;
+  const label=prompt('Nom de la séance (ex: "2x20\' mars", "3x15\' avril") :',sess.label||sess.filename);
+  if(label===null)return;
+  sess.label=label.trim()||sess.filename;
+  saveState();renderContent();
+}
+
+function toggleSess(id){
+  if(state.selectedSessions.includes(id))state.selectedSessions=state.selectedSessions.filter(x=>x!==id);
+  else state.selectedSessions.push(id);
+  renderContent();
+}
+
+function delSess(id){
+  if(!confirm('Supprimer cette séance ?'))return;
+  state.sessions[state.selected]=state.sessions[state.selected].filter(s=>s.id!==id);
+  state.selectedSessions=state.selectedSessions.filter(x=>x!==id);
+  saveState();renderContent();
+}
+
+function setupDrop(){
+  const dz=document.getElementById('dropZone');if(!dz)return;
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over')});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');[...e.dataTransfer.files].forEach(handleFile);});
+}
+function onFileSelect(e){[...e.target.files].forEach(handleFile);}
+
+function buildContext(){
+  const ath=state.athletes.find(a=>a.id===state.selected);
+  const allSess=state.sessions[state.selected]||[];
+  const sel=state.selectedSessions.length?allSess.filter(s=>state.selectedSessions.includes(s.id)):allSess.slice(0,6);
+  if(!sel.length)return'';
+  return`\n\n--- Données athlète : ${ath.name} ---\n`+sel.map(s=>`Séance: ${s.filename} (${s.date})
+Sport: ${SPORT_NAMES[s.sport]||s.sport} | Durée: ${fmtDur(s.durationSec)}
+FC moy: ${s.avgHR||'N/A'} bpm | FC max: ${s.maxHR||'N/A'} bpm${s.avgPow?`\nPuissance moy: ${s.avgPow} w | Pmax: ${s.maxPow||'N/A'} w`:''}${s.avgSpeed?`\nVitesse: ${s.avgSpeed} km/h${s.sport==='run'?' (allure '+fmtPace(s.avgSpeed)+')':''}`:''}${s.distanceM?`\nDistance: ${(s.distanceM/1000).toFixed(2)} km`:''}${s.avgCad?`\nCadence: ${s.avgCad} rpm`:''}`).join('\n\n')+'---';
+}
+
+function renderAnalyse(c){
+  const ath=state.athletes.find(a=>a.id===state.selected);
+  const selSess=(state.sessions[state.selected]||[]).filter(s=>state.selectedSessions.includes(s.id));
+  const hasKey=!!state.apiKey;
+  const isComparison=selSess.length>=2;
+  c.style.padding='0';
+  c.innerHTML=`
+    <div class="chat-wrap">
+      <div class="context-bar">
+        <span style="color:var(--text3)">${isComparison?'Comparaison :':'Contexte :'}</span>
+        ${selSess.length?selSess.map((s,i)=>`<span class="ctx-tag" style="${isComparison?'background:rgba(59,130,246,.2)':''}">${isComparison?`${i+1}. `:''}${s.label||s.filename}</span>`).join(isComparison?' <span style="color:var(--text3)">vs</span> ':''):`<span class="ctx-tag">Toutes les séances (${(state.sessions[state.selected]||[]).length})</span>`}
+        <span style="margin-left:auto;cursor:pointer;color:var(--accent);font-size:11px" onclick="switchTab('sessions')">+ Séances</span>
+
+      </div>
+      
+      <div class="chat-msgs" id="chatMsgs"></div>
+      <div class="quick-row">
+        ${isComparison?`
+        <button class="q-btn" onclick="sendQuick('Compare la FC entre ces ${selSess.length} séances. Qu\\'est-ce que ça indique sur la progression ?')">Comparer FC</button>
+        <button class="q-btn" onclick="sendQuick('Compare la puissance et l\\'allure entre ces séances. Y a-t-il une progression ?')">Comparer puissance/allure</button>
+        <button class="q-btn" onclick="sendQuick('Analyse complète comparative : FC, puissance, allure, cadence. Que peut-on conclure ?')">Analyse complète</button>
+        <button class="q-btn" onclick="sendQuick('Des signes de fatigue ou de surcharge dans l\\'une de ces séances ?')">Fatigue</button>
+        `:`
+        <button class="q-btn" onclick="sendQuick('Analyse la fréquence cardiaque et dis-moi ce que tu observes sur la progression')">Analyse FC</button>
+        <button class="q-btn" onclick="sendQuick('Y a-t-il des signes de fatigue ou de surcharge dans ces données ?')">Fatigue</button>
+        <button class="q-btn" onclick="sendQuick('Compare la puissance et la FC entre les séances vélo')">Comparer vélo</button>
+        <button class="q-btn" onclick="sendQuick('Résumé de la semaine et recommandations pour la prochaine')">Résumé semaine</button>
+        `}
+      </div>
+      <div class="input-row">
+        <textarea class="chat-input" id="chatInput" placeholder="${isComparison?`Compare les ${selSess.length} séances sélectionnées...`:'Ex: Compare la FC des 2 séances 3x10\' à 260w...'}" rows="1" onkeydown="handleKey(event)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMsg()">Envoyer</button>
+      </div>
+    </div>
+  `;
+  if(!state.chat.length){
+    state.chat=[{role:'assistant',text:`Bonjour ! Prêt à analyser les données de **${ath.name}**.\n\n${isComparison?`**Mode comparaison** — ${selSess.length} séances sélectionnées :\n${selSess.map((s,i)=>`${i+1}. ${s.label||s.filename} (${s.date})`).join('\n')}\n\nUtilise les boutons ci-dessous ou pose ta question directement.`:selSess.length?`${selSess.length} séance(s) sélectionnée(s). Pose-moi tes questions !`:`Importe des séances dans l'onglet Séances, ou sélectionnes-en pour l'analyse.\n\n💡 Sélectionne 2 séances identiques pour les comparer.`}${!hasKey?'\n\n⚠ Configure ta clé API (bouton ⚙ API en haut) pour activer l\'analyse IA.':''}`}];
+  }
+  renderChat();
+}
+
+const HARDCODED_KEY = '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'; // Colle ta clé ici si tu veux l'intégrer directement
+
+function showApiConfig(){
+  const key=prompt('Colle ta clé API Anthropic (commence par sk-ant-...):\n\nTrouvable sur console.anthropic.com',state.apiKey||'');
+  if(key===null)return;
+  state.apiKey=key.trim();
+  saveState();
+  if(state.tab==='analyse'){state.chat=[];renderContent();}
+  else alert(state.apiKey?'Clé API enregistrée !':'Clé supprimée.');
+}
+
+function renderChat(){
+  const c=document.getElementById('chatMsgs');if(!c)return;
+  c.innerHTML=state.chat.map(m=>`
+    <div class="msg-row ${m.role==='user'?'coach':''}">
+      <div class="msg-av ${m.role==='user'?'coach':'ai'}">${m.role==='user'?'C':'AI'}</div>
+      <div class="bubble ${m.role==='user'?'coach':'ai'}">${m.text.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>')}</div>
+    </div>`).join('');
+  if(state.loading)c.innerHTML+=`<div class="msg-row"><div class="msg-av ai">AI</div><div class="bubble ai"><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div></div>`;
+  c.scrollTop=c.scrollHeight;
+}
+
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
+
+async function sendMsg(){
+  const inp=document.getElementById('chatInput');
+  const text=inp.value.trim();
+  if(!text||state.loading)return;
+  if(!state.apiKey){showApiConfig();return;}
+  inp.value='';
+  state.chat.push({role:'user',text});
+  state.loading=true;renderChat();
+  const context=buildContext();
+  const ath=state.athletes.find(a=>a.id===state.selected);
+  const selSess=(state.sessions[state.selected]||[]).filter(s=>state.selectedSessions.includes(s.id));
+  const isComparison=selSess.length>=2;
+  const system=`Tu es un assistant expert en analyse de données d'entraînement triathlon pour le coach de Wayve Coaching. Tu analyses les données de séances (FC, puissance, allure, cadence) exportées depuis Nolio.${isComparison?` L'utilisateur compare ${selSess.length} séances — fais une analyse comparative structurée : mets en évidence les différences de FC, puissance, allure entre les séances, et ce que ça indique sur la progression ou la fatigue.`:''} Réponds en français, de façon précise et concise. Observations concrètes et recommandations pratiques. Texte clair, pas de markdown excessif.`;
+  const msgs=[...state.chat.slice(0,-1).map(m=>({role:m.role,content:m.text})),{role:'user',content:text+(context?'\n'+context:'')}];
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':state.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-calls':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system,messages:msgs})
+    });
+    const text=await res.text();
+    let data;
+    try{data=JSON.parse(text);}catch(e){state.chat.push({role:'assistant',text:'Réponse invalide : '+text.slice(0,100)});state.loading=false;saveState();renderChat();return;}
+    if(data.error){state.chat.push({role:'assistant',text:'Erreur API : '+data.error.message});}
+    else{const reply=(data.content||[]).map(b=>b.text||'').join('');state.chat.push({role:'assistant',text:reply||'Pas de réponse.'});}
+  }catch(e){state.chat.push({role:'assistant',text:'Erreur : '+e.message});}
+  state.loading=false;saveState();renderChat();
+}
+
+function sendQuick(text){const inp=document.getElementById('chatInput');if(inp)inp.value=text;sendMsg();}
+
+function renderStats(c){
+  const ath=state.athletes.find(a=>a.id===state.selected);
+  const list=state.sessions[state.selected]||[];
+  const run=list.filter(s=>s.sport==='run'),bike=list.filter(s=>s.sport==='bike'),swim=list.filter(s=>s.sport==='swim');
+  const avg=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):null;
+  const allHR=list.filter(s=>s.avgHR).map(s=>s.avgHR);
+  const allPow=bike.filter(s=>s.avgPow).map(s=>s.avgPow);
+  c.style.padding='16px';
+  c.innerHTML=`
+    <div class="section-lbl">${ath.name} — toutes les séances</div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-lbl">Course à pied</div><div class="stat-val">${run.length}<span class="stat-unit"> séances</span></div></div>
+      <div class="stat-box"><div class="stat-lbl">Vélo</div><div class="stat-val">${bike.length}<span class="stat-unit"> séances</span></div></div>
+      <div class="stat-box"><div class="stat-lbl">Natation</div><div class="stat-val">${swim.length}<span class="stat-unit"> séances</span></div></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-lbl">FC moy globale</div><div class="stat-val">${avg(allHR)||'—'}<span class="stat-unit"> bpm</span></div></div>
+      <div class="stat-box"><div class="stat-lbl">Puissance moy vélo</div><div class="stat-val">${avg(allPow)||'—'}<span class="stat-unit"> w</span></div></div>
+      <div class="stat-box"><div class="stat-lbl">Total séances</div><div class="stat-val">${list.length}</div></div>
+    </div>
+    ${list.length>1?`
+    <div class="bar-chart">
+      <div class="bc-title">FC moyenne par séance (6 dernières)</div>
+      <div class="bars">
+        ${list.slice(0,6).reverse().map(s=>{
+          const h=s.avgHR?Math.max(4,Math.round(((s.avgHR-110)/60)*70)):4;
+          const col={run:'var(--run)',bike:'var(--bike)',swim:'var(--swim)'}[s.sport]||'var(--bike)';
+          return`<div class="bar-col"><div class="bar-val">${s.avgHR||'—'}</div><div class="bar" style="height:${h}px;background:${col}"></div><div class="bar-lbl">${s.date.split(' ').slice(0,2).join(' ')}</div></div>`;
+        }).join('')}
+      </div>
+    </div>`:''}
+    <button class="analyse-cta" onclick="state.selectedSessions=[];switchTab('analyse');setTimeout(()=>{const i=document.getElementById('chatInput');if(i){i.value='Analyse toutes les séances importées et donne-moi un bilan complet : progression, points forts, points à travailler.';sendMsg();}},150)">Analyse IA complète de toutes les séances →</button>
+  `;
+}
+
+loadState();if(HARDCODED_KEY&&!state.apiKey){state.apiKey=HARDCODED_KEY;}render();
+</script>
+</body>
+</html>

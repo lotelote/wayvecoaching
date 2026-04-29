@@ -449,7 +449,7 @@ function renderAnalyse(c){
   renderChat();
 }
 
-const HARDCODED_KEY = ''; // Colle ta clé ici si tu veux l'intégrer directement
+const HARDCODED_KEY = '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'; // Colle ta clé ici si tu veux l'intégrer directement
 
 function showApiConfig(){
   const key=prompt('Colle ta clé API Anthropic (commence par sk-ant-...):\n\nTrouvable sur console.anthropic.com',state.apiKey||'');
@@ -488,16 +488,16 @@ async function sendMsg(){
   const system=`Tu es un assistant expert en analyse de données d'entraînement triathlon pour le coach de Wayve Coaching. Tu analyses les données de séances (FC, puissance, allure, cadence) exportées depuis Nolio.${isComparison?` L'utilisateur compare ${selSess.length} séances — fais une analyse comparative structurée : mets en évidence les différences de FC, puissance, allure entre les séances, et ce que ça indique sur la progression ou la fatigue.`:''} Réponds en français, de façon précise et concise. Observations concrètes et recommandations pratiques. Texte clair, pas de markdown excessif.`;
   const msgs=[...state.chat.slice(0,-1).map(m=>({role:m.role,content:m.text})),{role:'user',content:text+(context?'\n'+context:'')}];
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch('/.netlify/functions/claude',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':state.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-calls':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system,messages:msgs})
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({system,messages:msgs})
     });
     const text=await res.text();
     let data;
     try{data=JSON.parse(text);}catch(e){state.chat.push({role:'assistant',text:'Réponse invalide : '+text.slice(0,100)});state.loading=false;saveState();renderChat();return;}
-    if(data.error){state.chat.push({role:'assistant',text:'Erreur API : '+data.error.message});}
-    else{const reply=(data.content||[]).map(b=>b.text||'').join('');state.chat.push({role:'assistant',text:reply||'Pas de réponse.'});}
+    if(data.error){state.chat.push({role:'assistant',text:'Erreur API : '+data.error});}
+    else{state.chat.push({role:'assistant',text:data.reply||'Pas de réponse.'});}
   }catch(e){state.chat.push({role:'assistant',text:'Erreur : '+e.message});}
   state.loading=false;saveState();renderChat();
 }
